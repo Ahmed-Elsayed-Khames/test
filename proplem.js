@@ -30,29 +30,52 @@ const preview = document.getElementById('preview');
 
 let stream;
 
-// البحث عن الكاميرا الخلفية وتشغيلها
+// المحاولة الأولى: استخدام facingMode لتحديد الكاميرا الخلفية
 async function startCamera() {
     try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        
-        let backCameraId = videoDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId;
-
-        if (!backCameraId && videoDevices.length > 1) {
-            backCameraId = videoDevices[1].deviceId; // المحاولة مع الكاميرا الثانية
-        }
-
         stream = await navigator.mediaDevices.getUserMedia({
-            video: { deviceId: backCameraId ? { exact: backCameraId } : undefined }
+            video: { facingMode: { exact: "environment" } }
         });
 
         video.srcObject = stream;
         video.style.display = 'block';
         snapBtn.style.display = 'block';
         captureBtn.style.display = 'none';
+
     } catch (error) {
-        console.error('Error accessing camera:', error);
-        alert('Cannot access the camera.');
+        console.warn('facingMode failed, trying deviceId...', error);
+        selectBackCamera(); // المحاولة الثانية: البحث عن كاميرا خلفية
+    }
+}
+
+// المحاولة الثانية: البحث عن الكاميرا الخلفية يدويًا
+async function selectBackCamera() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+        let backCameraId = videoDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId;
+
+        if (!backCameraId && videoDevices.length > 1) {
+            backCameraId = videoDevices[1].deviceId; // المحاولة مع الكاميرا الثانية
+        }
+
+        if (!backCameraId) {
+            throw new Error("No back camera found");
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: backCameraId } }
+        });
+
+        video.srcObject = stream;
+        video.style.display = 'block';
+        snapBtn.style.display = 'block';
+        captureBtn.style.display = 'none';
+
+    } catch (error) {
+        console.error('Error accessing back camera:', error);
+        alert('Cannot access the back camera.');
     }
 }
 
@@ -81,3 +104,5 @@ snapBtn.addEventListener('click', () => {
     snapBtn.style.display = 'none';
     captureBtn.style.display = 'block';
 });
+
+
