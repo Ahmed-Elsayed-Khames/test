@@ -24,7 +24,9 @@ submitBtn.addEventListener('click',(event)=>{
 // take a photo
 const captureBtn = document.getElementById('capture-btn');
 const video = document.createElement('video'); // إنشاء عنصر فيديو ديناميكي
-document.body.appendChild(video); // إضافته إلى الصفحة
+const checkboxesContainer = document.querySelector('.checkbox-group'); // احصل على العنصر الذي يحتوي على الـ checkboxes
+checkboxesContainer.appendChild(video); // أضف الفيديو داخله
+
 
 let stream;
 
