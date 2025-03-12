@@ -30,11 +30,22 @@ const preview = document.getElementById('preview');
 
 let stream;
 
-captureBtn.addEventListener('click', async () => {
+// البحث عن الكاميرا الخلفية وتشغيلها
+async function startCamera() {
     try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        let backCameraId = videoDevices.find(device => device.label.toLowerCase().includes('back'))?.deviceId;
+
+        if (!backCameraId && videoDevices.length > 1) {
+            backCameraId = videoDevices[1].deviceId; // المحاولة مع الكاميرا الثانية
+        }
+
         stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" } 
+            video: { deviceId: backCameraId ? { exact: backCameraId } : undefined }
         });
+
         video.srcObject = stream;
         video.style.display = 'block';
         snapBtn.style.display = 'block';
@@ -43,27 +54,33 @@ captureBtn.addEventListener('click', async () => {
         console.error('Error accessing camera:', error);
         alert('Cannot access the camera.');
     }
-});
+}
 
+// فتح الكاميرا عند الضغط على الزر
+captureBtn.addEventListener('click', startCamera);
 
+// التقاط الصورة
 snapBtn.addEventListener('click', () => {
     const context = canvas.getContext('2d');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+    // تحويل الصورة إلى ملف وإرسالها للخادم
     canvas.toBlob(blob => {
         uploadImage(blob);
     }, 'image/jpeg');
 
-    
+    // عرض الصورة الملتقطة
     preview.src = canvas.toDataURL('image/jpeg');
     preview.style.display = 'block';
 
-
+    // إيقاف الكاميرا
     stream.getTracks().forEach(track => track.stop());
     video.style.display = 'none';
     snapBtn.style.display = 'none';
     captureBtn.style.display = 'block';
 });
+
+
 }
