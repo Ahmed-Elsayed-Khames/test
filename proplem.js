@@ -22,7 +22,6 @@ submitBtn.addEventListener('click',(event)=>{
 
 
 // take a photo
-
 const captureBtn = document.getElementById('capture-btn');
 const snapBtn = document.getElementById('snap-btn');
 const video = document.getElementById('video');
@@ -31,10 +30,11 @@ const preview = document.getElementById('preview');
 
 let stream;
 
-
 captureBtn.addEventListener('click', async () => {
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" } 
+        });
         video.srcObject = stream;
         video.style.display = 'block';
         snapBtn.style.display = 'block';
@@ -45,21 +45,20 @@ captureBtn.addEventListener('click', async () => {
     }
 });
 
+
 snapBtn.addEventListener('click', () => {
     const context = canvas.getContext('2d');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-
     canvas.toBlob(blob => {
         uploadImage(blob);
     }, 'image/jpeg');
 
-
+    
     preview.src = canvas.toDataURL('image/jpeg');
     preview.style.display = 'block';
-
 
 
     stream.getTracks().forEach(track => track.stop());
@@ -67,5 +66,4 @@ snapBtn.addEventListener('click', () => {
     snapBtn.style.display = 'none';
     captureBtn.style.display = 'block';
 });
-
-
+}
