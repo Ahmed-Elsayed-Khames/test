@@ -82,5 +82,3 @@ snapBtn.addEventListener('click', () => {
     captureBtn.style.display = 'block';
 });
 
-
-}
